@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PlayerLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum CourtType {
+  HARD
+  CLAY
+  GRASS
+  CARPET
+}
+
+model Player {
+  id                    BigInt      @id
+  username              String?
+  firstName             String
+  lastName              String?
+  languageCode          String? // ru, en, etc.
+  isBot                 Boolean     @default(false)
+  isPremium             Boolean? // Telegram Premium
+  addedToAttachmentMenu Boolean? // Can attach files
+  allowsWriteToPm       Boolean? // Allows to send messages
+  level                 PlayerLevel @default(BEGINNER)
+  experience            Int         @default(0)
+  rating                Int         @default(1000) // Рейтинг игрока
+  district              String? // Район проживания
+  preferredCourtTypes   String[]    @default([])
+  availability          String[]    @default([])
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@map("players")
+}
