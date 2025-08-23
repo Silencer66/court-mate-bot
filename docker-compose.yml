@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # База данных PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: court_mate_postgres
+    environment:
+      POSTGRES_DB: court_mate_db
+      POSTGRES_USER: court_mate_user
+      POSTGRES_PASSWORD: court_mate_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./prisma:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - court_mate_network
+    restart: unless-stopped
+
+  # pgAdmin для управления базой данных
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: court_mate_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@courtmate.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - court_mate_network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # Ваше приложение
+  app:
+    build: .
+    container_name: court_mate_app
+    environment:
+      NODE_ENV: development
+      # Используем переменные из env/development.env
+      BOT_TOKEN: ${BOT_TOKEN}
+      DATABASE_URL: postgresql://court_mate_user:court_mate_password@postgres:5432/court_mate_db?schema=public
+      PORT: 8045
+      HOST: localhost
+    ports:
+      - "8045:8045"
+    networks:
+      - court_mate_network
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    # Используем ваш существующий скрипт start-dev
+    command: ["npm", "run", "start-dev"]
+
+volumes:
+  postgres_data:
+  pgadmin_data:
+
+networks:
+  court_mate_network:
+    driver: bridge

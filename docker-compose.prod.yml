@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # База данных PostgreSQL
+  postgres:
+    image: postgres:15-alpine
+    container_name: court_mate_postgres_prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-court_mate_db}
+      POSTGRES_USER: ${POSTGRES_USER:-court_mate_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks:
+      - court_mate_network_prod
+    restart: unless-stopped
+    # Убираем порт для безопасности в продакшне
+    # ports:
+    #   - "5432:5432"
+
+  # pgAdmin для управления базой данных
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: court_mate_pgadmin_prod
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@courtmate.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data_prod:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - court_mate_network_prod
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  # Ваше приложение
+  app:
+    build: .
+    container_name: court_mate_app_prod
+    environment:
+      NODE_ENV: production
+      # Используем переменные из env/production.env
+      BOT_TOKEN: ${BOT_TOKEN}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-court_mate_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-court_mate_db}?schema=public
+      PORT: 8046
+      HOST: localhost
+    networks:
+      - court_mate_network_prod
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    # Используем ваш существующий скрипт start
+    command: ["npm", "run", "start"]
+    # Убираем порт для безопасности в продакшне
+    # ports:
+    #   - "8046:8046"
+
+volumes:
+  postgres_data_prod:
+  pgadmin_data_prod:
+
+networks:
+  court_mate_network_prod:
+    driver: bridge
