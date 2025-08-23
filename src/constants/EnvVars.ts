@@ -16,3 +16,21 @@ export default {
         DATABASE_URL: process.env.DATABASE_URL ?? "",
     },
 } as const;
+
+// Районы Москвы
+export const MOSCOW_DISTRICTS = {
+    CAO: { name: "Центральный (ЦАО)", code: "ЦАО" },
+    SAO: { name: "Северный (САО)", code: "САО" },
+    SVAO: { name: "Северо-Восточный (СВАО)", code: "СВАО" },
+    VAO: { name: "Восточный (ВАО)", code: "ВАО" },
+    YUVAO: { name: "Юго-Восточный (ЮВАО)", code: "ЮВАО" },
+    YUAO: { name: "Южный (ЮАО)", code: "ЮАО" },
+    YUZAO: { name: "Юго-Западный (ЮЗАО)", code: "ЮЗАО" },
+    ZAO: { name: "Западный (ЗАО)", code: "ЗАО" },
+    SZAO: { name: "Северо-Западный (СЗАО)", code: "СЗАО" },
+    ZELAO: { name: "Зеленоградский (ЗелАО)", code: "ЗелАО" },
+    NAO: { name: "Новомосковский (НАО)", code: "НАО" },
+    TAO: { name: "Троицкий (ТАО)", code: "ТАО" },
+} as const;
+
+export type MoscowDistrictCode = keyof typeof MOSCOW_DISTRICTS;

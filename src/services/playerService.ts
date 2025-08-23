@@ -1,133 +1,110 @@
-import { prisma } from "@/config/database";
-import { PlayerLevel } from "@/types/tennis";
-import type { Player } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { validateNTRPRating } from "./ntrpService";
+
+const prisma = new PrismaClient();
+
+export interface CreatePlayerData {
+    id: bigint;
+    username?: string;
+    firstName: string;
+    lastName?: string;
+    languageCode?: string;
+    isBot?: boolean;
+    isPremium?: boolean;
+    addedToAttachmentMenu?: boolean;
+}
+
+export interface UpdatePlayerNTRPData {
+    ntrp: number;
+}
+
+export interface UpdatePlayerDistrictData {
+    district: string;
+}
+
+export interface UpdatePlayerCourtTypesData {
+    preferredCourtTypes: string[];
+}
 
 export class PlayerService {
-    async createPlayer(
-        telegramId: number,
-        firstName: string,
-        username?: string,
-        lastName?: string,
-        languageCode?: string,
-        isBot: boolean = false,
-        isPremium?: boolean,
-        addedToAttachmentMenu?: boolean,
-        allowsWriteToPm?: boolean
-    ): Promise<Player> {
+    // Создание нового игрока
+    async createPlayer(data: CreatePlayerData) {
         return await prisma.player.create({
             data: {
-                id: BigInt(telegramId),
-                firstName,
-                username,
-                lastName,
-                languageCode,
-                isBot,
-                isPremium,
-                addedToAttachmentMenu,
-                allowsWriteToPm,
-                level: PlayerLevel.BEGINNER,
-                experience: 0,
-                rating: 1000,
-                district: null,
-                preferredCourtTypes: [],
-                availability: [],
+                id: data.id,
+                username: data.username,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                languageCode: data.languageCode,
+                isBot: data.isBot || false,
+                isPremium: data.isPremium,
+                addedToAttachmentMenu: data.addedToAttachmentMenu,
             },
         });
     }
 
-    async getPlayerByTelegramId(telegramId: number): Promise<Player | null> {
+    // Получение игрока по ID
+    async getPlayerById(id: bigint) {
         return await prisma.player.findUnique({
-            where: { id: BigInt(telegramId) },
+            where: { id },
         });
     }
 
-    async updatePlayerLevel(
-        telegramId: number,
-        level: PlayerLevel
-    ): Promise<Player> {
+    // Обновление NTRP рейтинга игрока
+    async updatePlayerNTRP(id: bigint, data: UpdatePlayerNTRPData) {
+        if (!validateNTRPRating(data.ntrp)) {
+            throw new Error(
+                "Некорректный NTRP рейтинг. Должен быть от 1.0 до 7.0 с шагом 0.5"
+            );
+        }
+
         return await prisma.player.update({
-            where: { id: BigInt(telegramId) },
-            data: { level },
+            where: { id },
+            data: { ntrp: data.ntrp },
         });
     }
 
-    async updatePlayerExperience(
-        telegramId: number,
-        experience: number
-    ): Promise<Player> {
+    // Обновление района проживания игрока
+    async updatePlayerDistrict(id: bigint, data: UpdatePlayerDistrictData) {
         return await prisma.player.update({
-            where: { id: BigInt(telegramId) },
-            data: { experience },
+            where: { id },
+            data: { district: data.district },
         });
     }
 
-    async updatePlayerRating(
-        telegramId: number,
-        rating: number
-    ): Promise<Player> {
+    // Обновление предпочитаемых типов покрытий
+    async updatePlayerCourtTypes(id: bigint, data: UpdatePlayerCourtTypesData) {
         return await prisma.player.update({
-            where: { id: BigInt(telegramId) },
-            data: { rating },
+            where: { id },
+            data: { preferredCourtTypes: data.preferredCourtTypes },
         });
     }
 
-    async updatePlayerDistrict(
-        telegramId: number,
-        district: string
-    ): Promise<Player> {
-        return await prisma.player.update({
-            where: { id: BigInt(telegramId) },
-            data: { district },
+    // Получение всех игроков
+    async getAllPlayers() {
+        return await prisma.player.findMany({
+            orderBy: { createdAt: "desc" },
         });
     }
 
-    async updatePreferredCourtTypes(
-        telegramId: number,
-        courtTypes: string[]
-    ): Promise<Player> {
-        return await prisma.player.update({
-            where: { id: BigInt(telegramId) },
-            data: { preferredCourtTypes: courtTypes },
+    // Поиск игроков по району
+    async getPlayersByDistrict(district: string) {
+        return await prisma.player.findMany({
+            where: { district },
+            orderBy: { createdAt: "desc" },
         });
     }
 
-    async updateAvailability(
-        telegramId: number,
-        availability: string[]
-    ): Promise<Player> {
-        return await prisma.player.update({
-            where: { id: BigInt(telegramId) },
-            data: { availability },
-        });
-    }
-
-    async findPlayersByLevel(
-        level: PlayerLevel,
-        excludeTelegramId?: number
-    ): Promise<Player[]> {
+    // Поиск игроков по NTRP рейтингу
+    async getPlayersByNTRP(minRating: number, maxRating: number) {
         return await prisma.player.findMany({
             where: {
-                level,
-                id: excludeTelegramId
-                    ? { not: BigInt(excludeTelegramId) }
-                    : undefined,
+                ntrp: {
+                    gte: minRating,
+                    lte: maxRating,
+                },
             },
-            take: 10,
-        });
-    }
-
-    async findPlayersByDistrict(
-        district: string,
-        excludeTelegramId?: number
-    ): Promise<Player[]> {
-        return await prisma.player.findMany({
-            where: {
-                district,
-                id: excludeTelegramId
-                    ? { not: BigInt(excludeTelegramId) }
-                    : undefined,
-            },
-            take: 10,
+            orderBy: { createdAt: "desc" },
         });
     }
 }

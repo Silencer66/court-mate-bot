@@ -1,56 +1,60 @@
 import { Telegraf } from "telegraf";
-import { StartHandler } from "@/handlers/startHandler";
-import { SurveyHandler } from "@/handlers/surveyHandler";
+import {
+    handleStart,
+    handleManualNTRP,
+    handleStartNTRPSurvey,
+    handleCancelSurvey,
+} from "@/handlers/startHandler";
+import {
+    handleNTRPSurveyQuestion,
+    handleNTRPAnswer,
+    handleCourtTypeSelection,
+    handleFinishCourtSelection,
+    handleDistrictSelection,
+} from "@/handlers/ntrpSurveyHandler";
+import { handleNTRPInput } from "@/handlers/ntrpInputHandler";
 import { CommandHandler } from "@/handlers/commandHandler";
 import { PlayerService } from "@/services/playerService";
-import { SurveyService } from "@/services/surveyService";
 
 export function setupBotRoutes(bot: Telegraf) {
     const playerService = new PlayerService();
-    const surveyService = new SurveyService();
-
-    const surveyHandler = new SurveyHandler(surveyService);
-    const startHandler = new StartHandler(
-        playerService,
-        surveyService,
-        surveyHandler
-    );
     const commandHandler = new CommandHandler(playerService);
 
     // Команда /start
-    bot.start((ctx) => startHandler.handle(ctx));
+    bot.start(handleStart);
 
-    // Обработка ответов на опрос
-    bot.action(/survey_level_(\d+)/, async (ctx) => {
-        await surveyHandler.handleLevelAnswer(ctx);
-    });
+    // Обработчики для определения NTRP рейтинга
+    bot.action("set_ntrp_manual", handleManualNTRP);
+    bot.action("start_ntrp_survey", handleStartNTRPSurvey);
+    bot.action("cancel_survey", handleCancelSurvey);
 
-    bot.action(/survey_experience_(\d+)/, (ctx) =>
-        surveyHandler.handleExperienceAnswer(ctx)
-    );
-    bot.action(/survey_rating_(\d+)/, (ctx) =>
-        surveyHandler.handleRatingAnswer(ctx)
-    );
-    bot.action(/survey_court_(\d+)/, (ctx) =>
-        surveyHandler.handleCourtTypeAnswer(ctx)
+    // Обработчики для опроса NTRP
+    bot.action(/ntrp_survey_question_(\d+)/, handleNTRPSurveyQuestion);
+    bot.action(/ntrp_answer_(.+)_(.+)/, handleNTRPAnswer);
+
+    // Обработчики для выбора покрытий и районов
+    bot.action(/court_type_(.+)/, handleCourtTypeSelection);
+    bot.action("finish_court_selection", handleFinishCourtSelection);
+    bot.action(/district_(.+)/, handleDistrictSelection);
+
+    // Обработчики для главного меню
+    bot.action("show_profile", (ctx) => commandHandler.handleProfile(ctx));
+    bot.action("settings", (ctx) => commandHandler.handleSettings(ctx));
+    bot.action("find_partner", (ctx) => commandHandler.handleFindPartner(ctx));
+    bot.action("search_by_district", (ctx) =>
+        commandHandler.handleSearchByDistrict(ctx)
     );
 
-    // Обработка текстовых ответов для опроса
-    bot.hears(/.*/, (ctx) => {
+    // Обработка текстовых сообщений для ручного ввода NTRP
+    bot.hears(/^\d+\.?\d*$/, async (ctx) => {
         const telegramId = ctx.from?.id;
         if (!telegramId) return;
 
-        const surveyState = surveyHandler.getSurveyState(telegramId);
-        if (!surveyState) return;
-
-        if (surveyState === "district") {
-            surveyHandler.handleDistrictAnswer(ctx);
-            return;
-        }
-
-        if (surveyState === "availability") {
-            surveyHandler.handleAvailabilityAnswer(ctx);
-            return;
+        // Проверяем, есть ли у пользователя NTRP рейтинг
+        const player = await playerService.getPlayerById(BigInt(telegramId));
+        if (player && !player.ntrp) {
+            // Если у пользователя нет рейтинга, обрабатываем как ввод NTRP
+            await handleNTRPInput(ctx);
         }
     });
 

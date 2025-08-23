@@ -20,14 +20,23 @@ export class CommandHandler {
         const telegramId = ctx.from?.id;
         if (!telegramId) return;
 
-        const player = await this.playerService.getPlayerByTelegramId(
-            telegramId
+        const player = await this.playerService.getPlayerById(
+            BigInt(telegramId)
         );
         if (!player) {
             return ctx.reply(
                 "Профиль не найден. Используйте /start для создания профиля."
             );
         }
+
+        const ntrpText = player.ntrp
+            ? `NTRP рейтинг: ${player.ntrp}`
+            : "NTRP рейтинг: Не указан";
+        const districtText = player.district || "Не указан";
+        const courtTypesText =
+            player.preferredCourtTypes.length > 0
+                ? player.preferredCourtTypes.join(", ")
+                : "Не указано";
 
         ctx.reply(
             `👤 Ваш профиль:\n\n` +
@@ -37,18 +46,43 @@ export class CommandHandler {
                 `Username: ${
                     player.username ? `@${player.username}` : "Не указан"
                 }\n` +
-                `Уровень: ${player.level}\n` +
-                `Опыт: ${player.experience} лет\n` +
-                `Рейтинг: ${player.rating}\n` +
-                `Район: ${player.district || "Не указан"}\n` +
-                `Предпочитаемые корты: ${
-                    player.preferredCourtTypes.join(", ") || "Не указано"
-                }\n` +
-                `Доступность: ${player.availability.join(", ") || "Не указано"}`
+                `${ntrpText}\n` +
+                `Район: ${districtText}\n` +
+                `Предпочитаемые корты: ${courtTypesText}`
         );
     }
 
     handlePing(ctx: Context) {
         ctx.reply("pong");
+    }
+
+    handleSettings(ctx: Context) {
+        ctx.reply(
+            `⚙️ Настройки\n\n` +
+                `Эта функция находится в разработке.\n` +
+                `В будущем здесь можно будет изменить:\n` +
+                `• NTRP рейтинг\n` +
+                `• Предпочитаемые покрытия\n` +
+                `• Район проживания\n` +
+                `• Язык бота`
+        );
+    }
+
+    handleFindPartner(ctx: Context) {
+        ctx.reply(
+            `👥 Поиск партнера\n\n` +
+                `Эта функция находится в разработке.\n` +
+                `В будущем здесь можно будет найти партнеров по игре\n` +
+                `с учетом вашего NTRP рейтинга и района.`
+        );
+    }
+
+    handleSearchByDistrict(ctx: Context) {
+        ctx.reply(
+            `🔍 Поиск по району\n\n` +
+                `Эта функция находится в разработке.\n` +
+                `В будущем здесь можно будет найти игроков\n` +
+                `в вашем районе для совместной игры.`
+        );
     }
 }
