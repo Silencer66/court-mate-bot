@@ -113,4 +113,86 @@ export class CommandHandler {
             },
         });
     }
+
+    async handleListUsers(ctx: Context) {
+        const fromId = ctx.from?.id;
+        if (!fromId || fromId !== EnvVars.Telegram.ADMIN_ID) {
+            return ctx.reply("Команда доступна только администратору.");
+        }
+
+        const players = await this.playerService.getAllPlayers();
+        if (players.length === 0) {
+            return ctx.reply("Пока нет зарегистрированных пользователей.");
+        }
+
+        const escapeHtml = (value: string) =>
+            value
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+        const groupedByDistrict = new Map<string, typeof players>();
+        for (const p of players) {
+            const key = p.district ?? "—";
+            const arr = groupedByDistrict.get(key) ?? [];
+            arr.push(p);
+            groupedByDistrict.set(key, arr);
+        }
+
+        const districts = Array.from(groupedByDistrict.keys()).sort((a, b) => {
+            if (a === "—") return 1;
+            if (b === "—") return -1;
+            return a.localeCompare(b);
+        });
+
+        const sections: string[] = [];
+        for (const d of districts) {
+            const users = groupedByDistrict
+                .get(d)!
+                .slice()
+                .sort((a, b) => (b.ntrp ?? -Infinity) - (a.ntrp ?? -Infinity));
+
+            const lines = users.map((p) => {
+                const displayName = `${p.firstName}${
+                    p.lastName ? " " + p.lastName : ""
+                }`.trim();
+                const safeName = escapeHtml(
+                    displayName ||
+                        (p.username ? "@" + p.username : "Пользователь")
+                );
+                const link = `<a href="tg://user?id=${p.id.toString()}">${safeName}</a>`;
+                const userSuffix = p.username ? ` (@${p.username})` : "";
+                const ntrp =
+                    typeof p.ntrp === "number" ? p.ntrp.toString() : "—";
+                return `• <b>${ntrp}</b> | ${link}${userSuffix}`;
+            });
+
+            sections.push(`🏙️ <b>${escapeHtml(d)}</b>\n${lines.join("\n")}`);
+        }
+
+        const header = (total: number) => `👥 Пользователи: <b>${total}</b>`;
+        const MAX_LEN = 3500;
+        let buffer = "";
+        const total = players.length;
+
+        for (const section of sections) {
+            if (
+                (buffer + "\n\n" + section).length > MAX_LEN &&
+                buffer.length > 0
+            ) {
+                await ctx.reply(`${header(total)}\n\n${buffer}`.trim(), {
+                    parse_mode: "HTML",
+                });
+                buffer = section;
+            } else {
+                buffer = buffer ? `${buffer}\n\n${section}` : section;
+            }
+        }
+
+        if (buffer) {
+            await ctx.reply(`${header(total)}\n\n${buffer}`.trim(), {
+                parse_mode: "HTML",
+            });
+        }
+    }
 }

@@ -12,6 +12,7 @@ export default {
         BOT_TOKEN: process.env.BOT_TOKEN ?? "",
         LOGS_CHAT_ID: Number(process.env.LOGS_CHAT_ID) ?? -1002673541495,
         CHANNEL_URL: process.env.CHANNEL_URL ?? "https://t.me/digitaltennis",
+        ADMIN_ID: Number(process.env.ADMIN_ID) || 1197563966,
     },
     Database: {
         DATABASE_URL: process.env.DATABASE_URL ?? "",

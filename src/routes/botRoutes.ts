@@ -15,6 +15,7 @@ import {
 import { handleNTRPInput } from "@/handlers/ntrpInputHandler";
 import { CommandHandler } from "@/handlers/commandHandler";
 import { PlayerService } from "@/services/playerService";
+import EnvVars from "@/constants/EnvVars";
 
 export function setupBotRoutes(bot: Telegraf) {
     const playerService = new PlayerService();
@@ -28,6 +29,12 @@ export function setupBotRoutes(bot: Telegraf) {
         { command: "community", description: "Сообщество Digital Tennis" },
         { command: "ping", description: "Проверить работу бота" },
     ]);
+
+    // Отдельно добавим админскую команду в подсказки только для администратора
+    bot.telegram.setMyCommands(
+        [{ command: "users", description: "Список пользователей (админ)" }],
+        { scope: { type: "chat", chat_id: EnvVars.Telegram.ADMIN_ID } as any }
+    );
 
     // Команда /start
     bot.start(handleStart);
@@ -72,5 +79,6 @@ export function setupBotRoutes(bot: Telegraf) {
     bot.command("profile", (ctx) => commandHandler.handleProfile(ctx));
     bot.command("ping", (ctx) => commandHandler.handlePing(ctx));
     bot.command("community", (ctx) => commandHandler.handleCommunity(ctx));
+    bot.command("users", (ctx) => commandHandler.handleListUsers(ctx));
     bot.hears(/ping|пинг/i, (ctx) => commandHandler.handlePing(ctx));
 }
