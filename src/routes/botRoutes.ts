@@ -20,6 +20,15 @@ export function setupBotRoutes(bot: Telegraf) {
     const playerService = new PlayerService();
     const commandHandler = new CommandHandler(playerService);
 
+    // Регистрируем slash-команды для подсказок Telegram
+    bot.telegram.setMyCommands([
+        { command: "start", description: "Запустить бота" },
+        { command: "help", description: "Справка" },
+        { command: "profile", description: "Мой профиль" },
+        { command: "community", description: "Сообщество Digital Tennis" },
+        { command: "ping", description: "Проверить работу бота" },
+    ]);
+
     // Команда /start
     bot.start(handleStart);
 
@@ -61,5 +70,7 @@ export function setupBotRoutes(bot: Telegraf) {
     // Команды
     bot.command("help", (ctx) => commandHandler.handleHelp(ctx));
     bot.command("profile", (ctx) => commandHandler.handleProfile(ctx));
+    bot.command("ping", (ctx) => commandHandler.handlePing(ctx));
+    bot.command("community", (ctx) => commandHandler.handleCommunity(ctx));
     bot.hears(/ping|пинг/i, (ctx) => commandHandler.handlePing(ctx));
 }

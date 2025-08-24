@@ -11,6 +11,7 @@ export default {
     Telegram: {
         BOT_TOKEN: process.env.BOT_TOKEN ?? "",
         LOGS_CHAT_ID: Number(process.env.LOGS_CHAT_ID) ?? -1002673541495,
+        CHANNEL_URL: process.env.CHANNEL_URL ?? "https://t.me/digitaltennis",
     },
     Database: {
         DATABASE_URL: process.env.DATABASE_URL ?? "",

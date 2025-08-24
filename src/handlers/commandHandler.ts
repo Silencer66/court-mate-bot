@@ -1,5 +1,6 @@
 import { Context } from "telegraf";
 import { PlayerService } from "@/services/playerService";
+import EnvVars from "@/constants/EnvVars";
 
 export class CommandHandler {
     constructor(private playerService: PlayerService) {}
@@ -11,8 +12,20 @@ export class CommandHandler {
                 `/start - Начать/перезапустить бота\n` +
                 `/help - Показать эту справку\n` +
                 `/profile - Показать ваш профиль\n` +
-                `/find - Найти соперника\n` +
-                `/ping - Проверить работу бота`
+                `/ping - Проверить работу бота\n` +
+                `/community - Перейти в наш Telegram-канал`,
+            {
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {
+                                text: "💬 Сообщество Digital Tennis",
+                                url: EnvVars.Telegram.CHANNEL_URL,
+                            },
+                        ],
+                    ],
+                },
+            }
         );
     }
 
@@ -84,5 +97,20 @@ export class CommandHandler {
                 `В будущем здесь можно будет найти игроков\n` +
                 `в вашем районе для совместной игры.`
         );
+    }
+
+    handleCommunity(ctx: Context) {
+        ctx.reply(`Присоединяйся к нашему сообществу Digital Tennis 🎾`, {
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        {
+                            text: "Открыть канал",
+                            url: EnvVars.Telegram.CHANNEL_URL,
+                        },
+                    ],
+                ],
+            },
+        });
     }
 }

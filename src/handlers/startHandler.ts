@@ -1,5 +1,6 @@
 import { Context } from "telegraf";
 import { PlayerService } from "../services/playerService";
+import EnvVars from "@/constants/EnvVars";
 
 const playerService = new PlayerService();
 
@@ -60,6 +61,12 @@ function showRatingSelectionMenu(ctx: Context) {
                     callback_data: "start_ntrp_survey",
                 },
             ],
+            [
+                {
+                    text: "💬 Сообщество Digital Tennis",
+                    url: EnvVars.Telegram.CHANNEL_URL,
+                },
+            ],
         ],
     };
 
@@ -84,6 +91,12 @@ function showMainMenu(ctx: Context) {
             [
                 { text: "📊 Мой профиль", callback_data: "show_profile" },
                 { text: "⚙️ Настройки", callback_data: "settings" },
+            ],
+            [
+                {
+                    text: "💬 Сообщество Digital Tennis",
+                    url: EnvVars.Telegram.CHANNEL_URL,
+                },
             ],
         ],
     };
