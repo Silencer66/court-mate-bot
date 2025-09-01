@@ -37,3 +37,38 @@ model Player {
 
   @@map("players")
 }
+
+model Game {
+  id               Int      @id @default(autoincrement())
+  creatorId        BigInt
+  channelChatId    BigInt?
+  channelMessageId Int?
+  title            String?
+  description      String?
+  location         String?
+  startsAt         DateTime
+  maxPlayers       Int?
+  photoFileId      String?
+  levelHint        String?
+  isCancelled      Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  signups GameSignup[]
+
+  @@map("games")
+}
+
+model GameSignup {
+  id        Int      @id @default(autoincrement())
+  gameId    Int
+  playerId  BigInt
+  status    String   @default("JOINED") // JOINED | CANCELLED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@unique([gameId, playerId])
+  @@map("game_signups")
+}

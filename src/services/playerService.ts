@@ -87,6 +87,15 @@ export class PlayerService {
         });
     }
 
+    // Получение игроков по массиву ID
+    async getPlayersByIds(ids: bigint[]) {
+        if (ids.length === 0)
+            return [] as Awaited<ReturnType<typeof prisma.player.findMany>>;
+        return await prisma.player.findMany({
+            where: { id: { in: ids } },
+        });
+    }
+
     // Поиск игроков по району
     async getPlayersByDistrict(district: string) {
         return await prisma.player.findMany({

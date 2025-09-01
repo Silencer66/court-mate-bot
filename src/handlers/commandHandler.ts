@@ -116,7 +116,7 @@ export class CommandHandler {
 
     async handleListUsers(ctx: Context) {
         const fromId = ctx.from?.id;
-        if (!fromId || fromId !== EnvVars.Telegram.ADMIN_ID) {
+        if (!fromId || !EnvVars.Telegram.ADMIN_IDS.includes(fromId)) {
             return ctx.reply("Команда доступна только администратору.");
         }
 

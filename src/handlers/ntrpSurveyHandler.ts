@@ -2,6 +2,8 @@ import { Context } from "telegraf";
 import { NTRP_QUESTIONS, calculateNTRPRating } from "../services/ntrpService";
 import { PlayerService } from "../services/playerService";
 import { MOSCOW_DISTRICTS } from "../constants/EnvVars";
+import { consumePendingJoin } from "@/state/pendingJoin";
+import { GameService } from "@/services/gameService";
 
 const playerService = new PlayerService();
 
@@ -362,7 +364,23 @@ export async function handleDistrictSelection(ctx: Context) {
             district,
         });
 
-        const message = `🎉 Отлично! Ваш профиль настроен.
+        // Если было намерение записаться — добавим в игру
+        const pendingGameId = consumePendingJoin(telegramId);
+        let joinInfo = "";
+        if (pendingGameId) {
+            const gameService = new GameService();
+            const joinRes = await gameService.joinGame(
+                pendingGameId,
+                BigInt(telegramId)
+            );
+            joinInfo = joinRes.joined
+                ? `\n\n✅ Вы автоматически записаны на игру ID ${pendingGameId}.`
+                : `\n\n⚠️ Не удалось записаться на игру ID ${pendingGameId}: ${
+                      joinRes.reason || "ошибка"
+                  }`;
+        }
+
+        const message = `🎉 Отлично! Ваш профиль настроен.${joinInfo}
 
 Район: ${district}
 

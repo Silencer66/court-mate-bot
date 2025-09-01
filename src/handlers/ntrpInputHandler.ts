@@ -84,27 +84,3 @@ export async function handleNTRPInput(ctx: Context) {
         );
     }
 }
-
-// Обработчик для отмены ручного ввода
-export async function handleCancelManualInput(ctx: Context) {
-    const message = `🎾 Добро пожаловать в Court Mate Bot!
-
-Помоги нам определить твой рейтинг NTRP для лучшего подбора партнеров по игре.`;
-
-    const keyboard = {
-        inline_keyboard: [
-            [
-                {
-                    text: "📊 Указать рейтинг NTRP",
-                    callback_data: "set_ntrp_manual",
-                },
-                {
-                    text: "📝 Пройти небольшой опрос",
-                    callback_data: "start_ntrp_survey",
-                },
-            ],
-        ],
-    };
-
-    return ctx.reply(message, { reply_markup: keyboard });
-}
