@@ -44,6 +44,7 @@ services:
       NODE_ENV: production
       # Используем переменные из env/production.env
       BOT_TOKEN: ${BOT_TOKEN}
+      CHANNEL_ID: ${CHANNEL_ID}
       DATABASE_URL: postgresql://${POSTGRES_USER:-court_mate_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-court_mate_db}?schema=public
       PORT: 8046
       HOST: localhost
